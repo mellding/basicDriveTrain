@@ -16,7 +16,7 @@ public class Robot extends TimedRobot {
   private final SendableChooser<String> m_chooser = new SendableChooser<>();
 
   //Create Xbox controller
-  XboxController control00 = new XboxController(1);
+  XboxController control00 = new XboxController(0);
 
   //Create Talon SRX motor Controllers
   WPI_TalonSRX talonRight = new WPI_TalonSRX(0);
@@ -45,7 +45,21 @@ public class Robot extends TimedRobot {
     talonRight_follower.follow(talonRight);
     talonLeft_follower.follow(talonLeft);
 
-    
+    //Configure Current limiting options on the Drive Talons
+    talonRight.configPeakCurrentLimit(Constants.driveMaxPeakCurrent, Constants.driveMaxPeakCurrentTime);
+    talonRight.configContinuousCurrentLimit(Constants.driveMaxConinuousCurrent);
+    talonRight_follower.configPeakCurrentLimit(Constants.driveMaxPeakCurrent, Constants.driveMaxPeakCurrentTime);
+    talonRight_follower.configContinuousCurrentLimit(Constants.driveMaxConinuousCurrent);
+    talonLeft.configPeakCurrentLimit(Constants.driveMaxPeakCurrent, Constants.driveMaxPeakCurrentTime);
+    talonLeft.configContinuousCurrentLimit(Constants.driveMaxConinuousCurrent);
+    talonLeft_follower.configPeakCurrentLimit(Constants.driveMaxPeakCurrent, Constants.driveMaxPeakCurrentTime);
+    talonLeft_follower.configContinuousCurrentLimit(Constants.driveMaxConinuousCurrent);
+
+    //Enable current limiting functions on the Drive Talons
+    talonRight.enableCurrentLimit(true);
+    talonRight_follower.enableCurrentLimit(true);
+    talonLeft.enableCurrentLimit(true);
+    talonLeft_follower.enableCurrentLimit(true);
   }
 
   @Override
