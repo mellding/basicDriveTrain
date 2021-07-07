@@ -16,7 +16,7 @@ public class Robot extends TimedRobot {
   private final SendableChooser<String> m_chooser = new SendableChooser<>();
 
   //Create Xbox controller
-  XboxController control00 = new XboxController(0);
+  XboxController control00 = new XboxController(1);
 
   //Create Talon SRX motor Controllers
   WPI_TalonSRX talonRight = new WPI_TalonSRX(11);
@@ -46,20 +46,19 @@ public class Robot extends TimedRobot {
     talonLeft_follower.follow(talonLeft);
 
     //Configure Current limiting options on the Drive Talons
-    talonRight.configPeakCurrentLimit(Constants.driveMaxPeakCurrent, Constants.driveMaxPeakCurrentTime);
-    talonRight.configContinuousCurrentLimit(Constants.driveMaxConinuousCurrent);
-    talonRight_follower.configPeakCurrentLimit(Constants.driveMaxPeakCurrent, Constants.driveMaxPeakCurrentTime);
-    talonRight_follower.configContinuousCurrentLimit(Constants.driveMaxConinuousCurrent);
-    talonLeft.configPeakCurrentLimit(Constants.driveMaxPeakCurrent, Constants.driveMaxPeakCurrentTime);
-    talonLeft.configContinuousCurrentLimit(Constants.driveMaxConinuousCurrent);
-    talonLeft_follower.configPeakCurrentLimit(Constants.driveMaxPeakCurrent, Constants.driveMaxPeakCurrentTime);
-    talonLeft_follower.configContinuousCurrentLimit(Constants.driveMaxConinuousCurrent);
+    talonRight.configPeakCurrentLimit(0); talonRight.configContinuousCurrentLimit(Constants.driveMaxConinuousCurrent);
+    talonRight_follower.configPeakCurrentLimit(0); talonRight_follower.configContinuousCurrentLimit(Constants.driveMaxConinuousCurrent);
+    talonLeft.configPeakCurrentLimit(0); talonLeft.configContinuousCurrentLimit(Constants.driveMaxConinuousCurrent);
+    talonLeft_follower.configPeakCurrentLimit(0); talonLeft_follower.configContinuousCurrentLimit(Constants.driveMaxConinuousCurrent);
 
     //Enable current limiting functions on the Drive Talons
     talonRight.enableCurrentLimit(true);
     talonRight_follower.enableCurrentLimit(true);
     talonLeft.enableCurrentLimit(true);
     talonLeft_follower.enableCurrentLimit(true);
+
+    talonRight.configOpenloopRamp(Constants.driveRampTime);
+    talonLeft.configOpenloopRamp(Constants.driveRampTime);
   }
 
   @Override
@@ -68,7 +67,7 @@ public class Robot extends TimedRobot {
   @Override
   public void autonomousInit() {
     m_autoSelected = m_chooser.getSelected();
-    // m_autoSelected = SmartDashboard.getString("Auto Selector", kDefaultAuto);
+    m_autoSelected = SmartDashboard.getString("Auto Selector", kDefaultAuto);
     System.out.println("Auto selected: " + m_autoSelected);
   }
 
@@ -93,31 +92,14 @@ public class Robot extends TimedRobot {
   /** This function is called periodically during operator control. */
   @Override
   public void teleopPeriodic() {
+ 
+    m_robotDrive.arcadeDrive(-1 * control00.getY(GenericHID.Hand.kRight), control00.getX(GenericHID.Hand.kRight));
 
-    //Check to see if the control stick is out of the deadzone, it if is apply it to the drive
-    if( (Math.abs(control00.getY(GenericHID.Hand.kRight)) >=  Constants.rightStickDeadZone) &&
-        (Math.abs(control00.getX(GenericHID.Hand.kRight)) >=  Constants.rightStickDeadZone))
-            m_robotDrive.arcadeDrive(control00.getY(GenericHID.Hand.kRight), control00.getX(GenericHID.Hand.kRight));
-
-      else if(  (Math.abs(control00.getY(GenericHID.Hand.kRight)) >  Constants.rightStickDeadZone) &&
-                (Math.abs(control00.getX(GenericHID.Hand.kRight)) <  Constants.rightStickDeadZone)) 
-                  m_robotDrive.arcadeDrive(control00.getY(GenericHID.Hand.kRight), 0);
-
-      else if(  (Math.abs(control00.getY(GenericHID.Hand.kRight)) <  Constants.rightStickDeadZone) &&
-                (Math.abs(control00.getX(GenericHID.Hand.kRight)) >  Constants.rightStickDeadZone)) 
-                  m_robotDrive.arcadeDrive(0, control00.getX(GenericHID.Hand.kRight));
-
-      else if( (Math.abs(control00.getY(GenericHID.Hand.kRight)) < Constants.rightStickDeadZone) &&
-               (Math.abs(control00.getX(GenericHID.Hand.kRight)) <  Constants.rightStickDeadZone))
-                  m_robotDrive.arcadeDrive(0,0);
-
-      
-
-      
-    
     
     SmartDashboard.putNumber("Joystick X value", control00.getX(GenericHID.Hand.kRight));
     SmartDashboard.putNumber("Joystick Y value", control00.getY(GenericHID.Hand.kRight));
+    SmartDashboard.putNumber("Right Current", talonRight.getSupplyCurrent());
+    SmartDashboard.putNumber("Left Current", talonLeft.getSupplyCurrent());
   }
 
   /** This function is called once when the robot is disabled. */
