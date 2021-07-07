@@ -3,10 +3,10 @@ package frc.robot;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.drive.DifferentialDrive;
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX;
+
 import edu.wpi.first.wpilibj.GenericHID;
 
 public class Robot extends TimedRobot {
@@ -19,10 +19,10 @@ public class Robot extends TimedRobot {
   XboxController control00 = new XboxController(0);
 
   //Create Talon SRX motor Controllers
-  WPI_TalonSRX talonRight = new WPI_TalonSRX(0);
-  WPI_TalonSRX talonRight_follower = new WPI_TalonSRX(1);
-  WPI_TalonSRX talonLeft = new WPI_TalonSRX(2);
-  WPI_TalonSRX talonLeft_follower = new WPI_TalonSRX(3);
+  WPI_TalonSRX talonRight = new WPI_TalonSRX(11);
+  WPI_TalonSRX talonRight_follower = new WPI_TalonSRX(12);
+  WPI_TalonSRX talonLeft = new WPI_TalonSRX(13);
+  WPI_TalonSRX talonLeft_follower = new WPI_TalonSRX(14);
 
   DifferentialDrive m_robotDrive = new DifferentialDrive(talonLeft, talonRight);
 
@@ -93,7 +93,31 @@ public class Robot extends TimedRobot {
   /** This function is called periodically during operator control. */
   @Override
   public void teleopPeriodic() {
-    m_robotDrive.arcadeDrive(control00.getY(GenericHID.Hand.kLeft), control00.getX(GenericHID.Hand.kRight));
+
+    //Check to see if the control stick is out of the deadzone, it if is apply it to the drive
+    if( (Math.abs(control00.getY(GenericHID.Hand.kRight)) >=  Constants.rightStickDeadZone) &&
+        (Math.abs(control00.getX(GenericHID.Hand.kRight)) >=  Constants.rightStickDeadZone))
+            m_robotDrive.arcadeDrive(control00.getY(GenericHID.Hand.kRight), control00.getX(GenericHID.Hand.kRight));
+
+      else if(  (Math.abs(control00.getY(GenericHID.Hand.kRight)) >  Constants.rightStickDeadZone) &&
+                (Math.abs(control00.getX(GenericHID.Hand.kRight)) <  Constants.rightStickDeadZone)) 
+                  m_robotDrive.arcadeDrive(control00.getY(GenericHID.Hand.kRight), 0);
+
+      else if(  (Math.abs(control00.getY(GenericHID.Hand.kRight)) <  Constants.rightStickDeadZone) &&
+                (Math.abs(control00.getX(GenericHID.Hand.kRight)) >  Constants.rightStickDeadZone)) 
+                  m_robotDrive.arcadeDrive(0, control00.getX(GenericHID.Hand.kRight));
+
+      else if( (Math.abs(control00.getY(GenericHID.Hand.kRight)) < Constants.rightStickDeadZone) &&
+               (Math.abs(control00.getX(GenericHID.Hand.kRight)) <  Constants.rightStickDeadZone))
+                  m_robotDrive.arcadeDrive(0,0);
+
+      
+
+      
+    
+    
+    SmartDashboard.putNumber("Joystick X value", control00.getX(GenericHID.Hand.kRight));
+    SmartDashboard.putNumber("Joystick Y value", control00.getY(GenericHID.Hand.kRight));
   }
 
   /** This function is called once when the robot is disabled. */
