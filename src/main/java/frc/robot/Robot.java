@@ -4,10 +4,11 @@ import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.XboxController;
+import edu.wpi.first.wpilibj.Relay.Value;
 import edu.wpi.first.wpilibj.drive.DifferentialDrive;
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX;
-
 import edu.wpi.first.wpilibj.GenericHID;
+import edu.wpi.first.wpilibj.Relay;
 
 public class Robot extends TimedRobot {
   private static final String kDefaultAuto = "Default";
@@ -16,7 +17,10 @@ public class Robot extends TimedRobot {
   private final SendableChooser<String> m_chooser = new SendableChooser<>();
 
   //Create Xbox controller
-  XboxController control00 = new XboxController(1);
+  XboxController control00 = new XboxController(0);
+
+  //Create the relay for the dump valve
+  Relay dumpRelay = new Relay(0);
 
   //Create Talon SRX motor Controllers
   WPI_TalonSRX talonRight = new WPI_TalonSRX(11);
@@ -92,8 +96,16 @@ public class Robot extends TimedRobot {
   /** This function is called periodically during operator control. */
   @Override
   public void teleopPeriodic() {
- 
-    m_robotDrive.arcadeDrive(-1 * control00.getY(GenericHID.Hand.kRight), control00.getX(GenericHID.Hand.kRight));
+    if( control00.getY(GenericHID.Hand.kRight) < Constants.rightStickDeadZone){
+      m_robotDrive.arcadeDrive(-1 * control00.getY(GenericHID.Hand.kRight), control00.getX(GenericHID.Hand.kRight));
+    }
+    else if(control00.getY(GenericHID.Hand.kRight) > Constants.rightStickDeadZone){
+      m_robotDrive.arcadeDrive(-1 * control00.getY(GenericHID.Hand.kRight), -1 * control00.getX(GenericHID.Hand.kRight));
+    }
+   
+    if(control00.getAButton()){
+      dumpRelay.set(Value.kOn);
+    }
 
     
     SmartDashboard.putNumber("Joystick X value", control00.getX(GenericHID.Hand.kRight));

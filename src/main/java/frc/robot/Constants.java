@@ -12,8 +12,11 @@ public class Constants {
     public static final int driveMaxConinuousCurrent = 15;
 
     //Deadzone for Right Control Stick
-    public static final double rightStickDeadZone = .05;
+    public static final double rightStickDeadZone = .125;
 
     //seconds to ramp from 0 to full throttle
-    public static final double driveRampTime = .5;
+    public static final double driveRampTime = .75;
+
+    //time in milli seconds that the dump valve will remain open
+    public static final double dumpTime = 250;
 }
