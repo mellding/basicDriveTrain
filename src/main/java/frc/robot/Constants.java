@@ -18,5 +18,5 @@ public class Constants {
     public static final double driveRampTime = .75;
 
     //time in milli seconds that the dump valve will remain open
-    public static final double dumpTime = 250;
+    public static final double dumpTime = .0625;
 }

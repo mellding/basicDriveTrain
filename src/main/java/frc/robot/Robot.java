@@ -1,6 +1,7 @@
 package frc.robot;
 
 import edu.wpi.first.wpilibj.TimedRobot;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.XboxController;
@@ -63,6 +64,8 @@ public class Robot extends TimedRobot {
 
     talonRight.configOpenloopRamp(Constants.driveRampTime);
     talonLeft.configOpenloopRamp(Constants.driveRampTime);
+
+    dumpRelay.set(Value.kOff);
   }
 
   @Override
@@ -103,8 +106,14 @@ public class Robot extends TimedRobot {
       m_robotDrive.arcadeDrive(-1 * control00.getY(GenericHID.Hand.kRight), -1 * control00.getX(GenericHID.Hand.kRight));
     }
    
-    if(control00.getAButton()){
-      dumpRelay.set(Value.kOn);
+    if( control00.getAButton() && 
+        control00.getTriggerAxis(GenericHID.Hand.kRight) > .75 &&
+        control00.getAButtonReleased()){
+      dumpRelay.set(Value.kForward);
+      Timer.delay(Constants.dumpTime);
+      dumpRelay.set(Value.kOff);
+    }else{
+      dumpRelay.set(Value.kOff);
     }
 
     
@@ -112,6 +121,7 @@ public class Robot extends TimedRobot {
     SmartDashboard.putNumber("Joystick Y value", control00.getY(GenericHID.Hand.kRight));
     SmartDashboard.putNumber("Right Current", talonRight.getSupplyCurrent());
     SmartDashboard.putNumber("Left Current", talonLeft.getSupplyCurrent());
+    SmartDashboard.putBoolean("A button", control00.getAButton());
   }
 
   /** This function is called once when the robot is disabled. */
