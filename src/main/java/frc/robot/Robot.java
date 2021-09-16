@@ -7,6 +7,9 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj.Relay.Value;
 import edu.wpi.first.wpilibj.drive.DifferentialDrive;
+
+import com.ctre.phoenix.motorcontrol.ControlMode;
+import com.ctre.phoenix.motorcontrol.FeedbackDevice;
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.Relay;
@@ -28,8 +31,15 @@ public class Robot extends TimedRobot {
   WPI_TalonSRX talonRight_follower = new WPI_TalonSRX(12);
   WPI_TalonSRX talonLeft = new WPI_TalonSRX(13);
   WPI_TalonSRX talonLeft_follower = new WPI_TalonSRX(14);
+  WPI_TalonSRX talonRotate = new WPI_TalonSRX(15);
+  WPI_TalonSRX talonTilt = new WPI_TalonSRX(16);
+  WPI_TalonSRX talonRevolver = new WPI_TalonSRX(17);
 
   DifferentialDrive m_robotDrive = new DifferentialDrive(talonLeft, talonRight);
+
+  double rotateTarget = 0;
+  double tiltTarget = 0;
+  double revolverTarget = 0;
 
   /**
    * This function is run when the robot is first started up and should be used for any initialization code.
@@ -45,25 +55,49 @@ public class Robot extends TimedRobot {
     talonRight_follower.configFactoryDefault();
     talonLeft.configFactoryDefault();
     talonLeft_follower.configFactoryDefault();
+    talonRotate.configFactoryDefault();
+    talonTilt.configFactoryDefault();
+    talonRevolver.configFactoryDefault();
   
     //Configure The two following controllers
     talonRight_follower.follow(talonRight);
     talonLeft_follower.follow(talonLeft);
 
-    //Configure Current limiting options on the Drive Talons
+    //Configure Current limiting options on the Talons
     talonRight.configPeakCurrentLimit(0); talonRight.configContinuousCurrentLimit(Constants.driveMaxConinuousCurrent);
     talonRight_follower.configPeakCurrentLimit(0); talonRight_follower.configContinuousCurrentLimit(Constants.driveMaxConinuousCurrent);
     talonLeft.configPeakCurrentLimit(0); talonLeft.configContinuousCurrentLimit(Constants.driveMaxConinuousCurrent);
     talonLeft_follower.configPeakCurrentLimit(0); talonLeft_follower.configContinuousCurrentLimit(Constants.driveMaxConinuousCurrent);
+    talonRotate.configPeakCurrentLimit(0); talonRotate.configContinuousCurrentLimit(Constants.turretMaxCurrent);
+    talonTilt.configPeakCurrentLimit(0); talonTilt.configContinuousCurrentLimit(Constants.turretMaxCurrent);
 
-    //Enable current limiting functions on the Drive Talons
+    //Enable current limiting functions on the Talons
     talonRight.enableCurrentLimit(true);
     talonRight_follower.enableCurrentLimit(true);
     talonLeft.enableCurrentLimit(true);
     talonLeft_follower.enableCurrentLimit(true);
+    talonRotate.enableCurrentLimit(true);
+    talonTilt.enableCurrentLimit(true);
 
     talonRight.configOpenloopRamp(Constants.driveRampTime);
     talonLeft.configOpenloopRamp(Constants.driveRampTime);
+
+    //configure the Talons with Encoders
+    talonRotate.configSelectedFeedbackSensor(FeedbackDevice.QuadEncoder);
+    talonTilt.configSelectedFeedbackSensor(FeedbackDevice.QuadEncoder);
+    talonRevolver.configSelectedFeedbackSensor(FeedbackDevice.QuadEncoder);
+
+    talonRotate.config_kP(0, Constants.rotatekP);
+    talonTilt.config_kP(0, Constants.tiltkP);
+    talonRevolver.config_kP(0, Constants.revolvekP);
+
+    talonRotate.configMotionAcceleration(Constants.rotateAccel); talonRotate.configMotionCruiseVelocity(Constants.rotateVel);
+    talonTilt.configMotionAcceleration(Constants.tiltAccel); talonTilt.configMotionCruiseVelocity(Constants.tiltVel);
+    talonRevolver.configMotionAcceleration(Constants.revolveAccel); talonRevolver.configMotionCruiseVelocity(Constants.revolveVel);
+
+    talonRotate.setSelectedSensorPosition(0);
+    talonTilt.setSelectedSensorPosition(0);
+    talonRevolver.setSelectedSensorPosition(0);
 
     dumpRelay.set(Value.kOff);
   }
@@ -106,15 +140,24 @@ public class Robot extends TimedRobot {
       m_robotDrive.arcadeDrive(-1 * control00.getY(GenericHID.Hand.kRight), -1 * control00.getX(GenericHID.Hand.kRight));
     }
    
+
+
     if( control00.getAButton() && 
         control00.getTriggerAxis(GenericHID.Hand.kRight) > .75 &&
         control00.getAButtonReleased()){
       dumpRelay.set(Value.kForward);
       Timer.delay(Constants.dumpTime);
       dumpRelay.set(Value.kOff);
+      revolverTarget = revolverTarget + Constants.revolveToNext;
+      talonRevolver.set(ControlMode.MotionMagic, revolverTarget);
     }else{
       dumpRelay.set(Value.kOff);
     }
+
+    rotateTarget = rotateTarget + control00.getY(GenericHID.Hand.kLeft);
+    tiltTarget = tiltTarget + control00.getX(GenericHID.Hand.kLeft);
+    talonRotate.set(ControlMode.MotionMagic, rotateTarget);
+    talonTilt.set(ControlMode.MotionMagic, tiltTarget);
 
     
     SmartDashboard.putNumber("Joystick X value", control00.getX(GenericHID.Hand.kRight));
