@@ -10,27 +10,30 @@ public class Constants {
 
     //max continuous currents
     public static final int driveMaxConinuousCurrent = 15;
-    public static final int turretMaxCurrent = 5;
+    public static final int turretMaxCurrent = 2;
 
     //Deadzone for Right Control Stick
-    public static final double rightStickDeadZone = .1875;
+    public static final double rightStickDeadZone = .2;
 
     //seconds to ramp from 0 to full throttle
-    public static final double driveRampTime = .75;
+    public static final double driveRampTime = 1;
 
     //time in milli seconds that the dump valve will remain open
-    public static final double dumpTime = .0625;
+    public static final double dumpTime = .05;
+    public static final double dumpPauseTime = .05;
 
     //PID constants
-    public static final double rotatekP = 1;
-    public static final double tiltkP = 1;
-    public static final double revolvekP = 1;
+    public static final double rotatekP = 20;
+    public static final double tiltkP = .00001;
+    public static final double revolvekP = 20;
+    public static final double revolvekI = 1;
 
-    public static final double rotateAccel = 100; public static final double rotateVel = 100;
-    public static final double tiltAccel = 100; public static final double tiltVel = 100;
-    public static final double revolveAccel = 100; public static final double revolveVel = 100;
+    public static final double revolveAccel = 50; public static final double revolveVel = 50;
 
     //Revolver Rotation per shot
-    public static final double revolveToNext = 100;
+    public static final double revolveToNext = 331;
+    public static final int kTimeoutMs = 30;
+    public static final int kPIDLoopIdx = 0;
+    public static final int kSlotIdx = 0;
 
 }

@@ -9,7 +9,9 @@ import edu.wpi.first.wpilibj.Relay.Value;
 import edu.wpi.first.wpilibj.drive.DifferentialDrive;
 
 import com.ctre.phoenix.motorcontrol.ControlMode;
+//import com.ctre.phoenix.motorcontrol.ControlMode;
 import com.ctre.phoenix.motorcontrol.FeedbackDevice;
+//import com.ctre.phoenix.motorcontrol.can.TalonSRX;
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.Relay;
@@ -35,10 +37,10 @@ public class Robot extends TimedRobot {
   WPI_TalonSRX talonTilt = new WPI_TalonSRX(16);
   WPI_TalonSRX talonRevolver = new WPI_TalonSRX(17);
 
+  int _smoothing = 0;
+
   DifferentialDrive m_robotDrive = new DifferentialDrive(talonLeft, talonRight);
 
-  double rotateTarget = 0;
-  double tiltTarget = 0;
   double revolverTarget = 0;
 
   /**
@@ -83,21 +85,16 @@ public class Robot extends TimedRobot {
     talonLeft.configOpenloopRamp(Constants.driveRampTime);
 
     //configure the Talons with Encoders
-    talonRotate.configSelectedFeedbackSensor(FeedbackDevice.QuadEncoder);
-    talonTilt.configSelectedFeedbackSensor(FeedbackDevice.QuadEncoder);
     talonRevolver.configSelectedFeedbackSensor(FeedbackDevice.QuadEncoder);
-
-    talonRotate.config_kP(0, Constants.rotatekP);
-    talonTilt.config_kP(0, Constants.tiltkP);
+    talonRevolver.setSensorPhase(true);
+    talonRevolver.setInverted(false);
     talonRevolver.config_kP(0, Constants.revolvekP);
-
-    talonRotate.configMotionAcceleration(Constants.rotateAccel); talonRotate.configMotionCruiseVelocity(Constants.rotateVel);
-    talonTilt.configMotionAcceleration(Constants.tiltAccel); talonTilt.configMotionCruiseVelocity(Constants.tiltVel);
-    talonRevolver.configMotionAcceleration(Constants.revolveAccel); talonRevolver.configMotionCruiseVelocity(Constants.revolveVel);
-
-    talonRotate.setSelectedSensorPosition(0);
-    talonTilt.setSelectedSensorPosition(0);
+    talonRevolver.config_kI(0, Constants.revolvekI);
+    talonRevolver.configMotionCruiseVelocity(Constants.revolveVel);
+    talonRevolver.configMotionAcceleration(Constants.revolveAccel);
     talonRevolver.setSelectedSensorPosition(0);
+
+    talonRevolver.set(ControlMode.MotionMagic, revolverTarget);
 
     dumpRelay.set(Value.kOff);
   }
@@ -128,43 +125,60 @@ public class Robot extends TimedRobot {
 
   /** This function is called once when teleop is enabled. */
   @Override
-  public void teleopInit() {}
+  public void teleopInit() {
+  }
 
   /** This function is called periodically during operator control. */
   @Override
   public void teleopPeriodic() {
-    if( control00.getY(GenericHID.Hand.kRight) < Constants.rightStickDeadZone){
-      m_robotDrive.arcadeDrive(-1 * control00.getY(GenericHID.Hand.kRight), control00.getX(GenericHID.Hand.kRight));
-    }
-    else if(control00.getY(GenericHID.Hand.kRight) > Constants.rightStickDeadZone){
-      m_robotDrive.arcadeDrive(-1 * control00.getY(GenericHID.Hand.kRight), -1 * control00.getX(GenericHID.Hand.kRight));
+
+    if(SmartDashboard.getBoolean("Enable Drive", false)){
+      if( control00.getY(GenericHID.Hand.kRight) < Constants.rightStickDeadZone){
+        m_robotDrive.arcadeDrive(-1 * control00.getY(GenericHID.Hand.kRight), control00.getX(GenericHID.Hand.kRight));
+      }
+      else if(control00.getY(GenericHID.Hand.kRight) > Constants.rightStickDeadZone){
+        m_robotDrive.arcadeDrive(-1 * control00.getY(GenericHID.Hand.kRight), -1 * control00.getX(GenericHID.Hand.kRight));
+      }
     }
    
+    talonTilt.set(control00.getY(GenericHID.Hand.kLeft));
+    talonRotate.set(control00.getX(GenericHID.Hand.kLeft));
 
 
     if( control00.getAButton() && 
         control00.getTriggerAxis(GenericHID.Hand.kRight) > .75 &&
-        control00.getAButtonReleased()){
+        control00.getAButtonReleased() &&
+        talonRevolver.getSelectedSensorPosition() <= revolverTarget + 5 &&
+        talonRevolver.getSelectedSensorPosition() >= revolverTarget - 5
+        ){
       dumpRelay.set(Value.kForward);
       Timer.delay(Constants.dumpTime);
       dumpRelay.set(Value.kOff);
+      Timer.delay(Constants.dumpPauseTime);
       revolverTarget = revolverTarget + Constants.revolveToNext;
-      talonRevolver.set(ControlMode.MotionMagic, revolverTarget);
+      talonRevolver.set(revolverTarget);
     }else{
       dumpRelay.set(Value.kOff);
     }
 
-    rotateTarget = rotateTarget + control00.getY(GenericHID.Hand.kLeft);
-    tiltTarget = tiltTarget + control00.getX(GenericHID.Hand.kLeft);
-    talonRotate.set(ControlMode.MotionMagic, rotateTarget);
-    talonTilt.set(ControlMode.MotionMagic, tiltTarget);
-
+    if( control00.getBButton() && 
+        control00.getTriggerAxis(GenericHID.Hand.kRight) > .75 &&
+        control00.getBButtonReleased() &&
+        talonRevolver.getSelectedSensorPosition() <= revolverTarget + 5 &&
+        talonRevolver.getSelectedSensorPosition() >= revolverTarget - 5
+        ){
+          revolverTarget = revolverTarget + Constants.revolveToNext;
+          talonRevolver.set(revolverTarget);
+        }
     
     SmartDashboard.putNumber("Joystick X value", control00.getX(GenericHID.Hand.kRight));
     SmartDashboard.putNumber("Joystick Y value", control00.getY(GenericHID.Hand.kRight));
     SmartDashboard.putNumber("Right Current", talonRight.getSupplyCurrent());
     SmartDashboard.putNumber("Left Current", talonLeft.getSupplyCurrent());
     SmartDashboard.putBoolean("A button", control00.getAButton());
+    SmartDashboard.putNumber("Revolver Target", revolverTarget);
+    SmartDashboard.putNumber("Revolver Pos", talonRevolver.getSelectedSensorPosition());
+    SmartDashboard.putBoolean("Revolver In Pos", revolverTarget == talonRevolver.getSelectedSensorPosition());
   }
 
   /** This function is called once when the robot is disabled. */
