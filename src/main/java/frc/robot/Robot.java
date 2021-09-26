@@ -42,6 +42,7 @@ public class Robot extends TimedRobot {
   DifferentialDrive m_robotDrive = new DifferentialDrive(talonLeft, talonRight);
 
   double revolverTarget = 0;
+  double revolverTargetOld = 0;
 
   /**
    * This function is run when the robot is first started up and should be used for any initialization code.
@@ -126,23 +127,34 @@ public class Robot extends TimedRobot {
   /** This function is called once when teleop is enabled. */
   @Override
   public void teleopInit() {
+
+    talonRevolver.setSelectedSensorPosition(0);
+    revolverTarget = 0;
+
   }
 
   /** This function is called periodically during operator control. */
   @Override
   public void teleopPeriodic() {
 
-    if(SmartDashboard.getBoolean("Enable Drive", false)){
+    talonRevolver.set(ControlMode.MotionMagic, revolverTarget);
+
+    //if(SmartDashboard.getBoolean("Enable Drive", false)){
       if( control00.getY(GenericHID.Hand.kRight) < Constants.rightStickDeadZone){
         m_robotDrive.arcadeDrive(-1 * control00.getY(GenericHID.Hand.kRight), control00.getX(GenericHID.Hand.kRight));
       }
       else if(control00.getY(GenericHID.Hand.kRight) > Constants.rightStickDeadZone){
         m_robotDrive.arcadeDrive(-1 * control00.getY(GenericHID.Hand.kRight), -1 * control00.getX(GenericHID.Hand.kRight));
       }
-    }
+    //}
    
-    talonTilt.set(control00.getY(GenericHID.Hand.kLeft));
-    talonRotate.set(control00.getX(GenericHID.Hand.kLeft));
+    if(control00.getY(GenericHID.Hand.kLeft) > .25 || 
+        control00.getY(GenericHID.Hand.kLeft) < -.25){
+      talonTilt.set(control00.getY(GenericHID.Hand.kLeft));
+    }else{talonTilt.set(0);
+      }
+    
+    talonRotate.set(.5 * control00.getX(GenericHID.Hand.kLeft));
 
 
     if( control00.getAButton() && 

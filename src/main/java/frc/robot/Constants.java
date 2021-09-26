@@ -20,18 +20,16 @@ public class Constants {
 
     //time in milli seconds that the dump valve will remain open
     public static final double dumpTime = .05;
-    public static final double dumpPauseTime = .05;
+    public static final double dumpPauseTime = .125;
 
     //PID constants
-    public static final double rotatekP = 20;
-    public static final double tiltkP = .00001;
-    public static final double revolvekP = 20;
-    public static final double revolvekI = 1;
+    public static final double revolvekP = 200;
+    public static final double revolvekI = 0.5;
 
-    public static final double revolveAccel = 50; public static final double revolveVel = 50;
+    public static final double revolveAccel = 150; public static final double revolveVel = 1000;
 
     //Revolver Rotation per shot
-    public static final double revolveToNext = 331;
+    public static final double revolveToNext = 332;
     public static final int kTimeoutMs = 30;
     public static final int kPIDLoopIdx = 0;
     public static final int kSlotIdx = 0;
